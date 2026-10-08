@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Save Lahour!! 🏢</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Comic Sans MS", "Chalkboard SE", "Segoe UI", system-ui, sans-serif;
+    background: linear-gradient(#6ec6ff, #c7e9ff 60%, #9be29b 60%, #7ecb7e);
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+  }
+  #wrap {
+    position: relative;
+    width: min(100vw, 520px);
+    height: min(100dvh, 860px);
+    background: linear-gradient(#5eb6f2 0%, #aee1ff 62%, #8fd68f 62%, #6fbf6f 100%);
+    border: 4px solid #222;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    touch-action: none;
+    cursor: crosshair;
+  }
+  #building {
+    position: absolute;
+    top:0; left:0;
+    width: 140px;
+    height: 32%;
+    background: repeating-linear-gradient(#8d8d9e 0 18px, #7a7a8b 18px 20px);
+    background-color: #8d8d9e;
+    border-right: 4px solid #222;
+    border-bottom: 4px solid #222;
+  }
+  #building::after {
+    content:"";
+    position:absolute;
+    inset: 8px;
+    background-image:
+      linear-gradient(#ffe66d 0 0);
+    background-size: 22px 22px;
+    background-repeat: repeat;
+    background-position: 4px 4px;
+    opacity:.9;
+    mask: none;
+  }
+  #roof-label {
+    position:absolute;
+    top: 6px; left: 8px;
+    font-size:12px; font-weight:900;
+    background:#222; color:#fff;
+    padding:2px 8px; border-radius:20px;
+    z-index:5;
+  }
+  #pusher {
+    position:absolute;
+    font-size:38px;
+    z-index:4;
+    filter: drop-shadow(2px 2px 0 rgba(0,0,0,.3));
+  }
+  #lahour {
+    position:absolute;
+    font-size:52px;
+    line-height:1;
+    z-index:5;
+    transform-origin:center;
+    filter: drop-shadow(3px 3px 0 rgba(0,0,0,.25));
+    will-change: transform, left, top;
+  }
+  #speech {
+    position:absolute;
+    background:white;
+    border:3px solid #222;
+    border-radius:14px;
+    padding:4px 10px;
+    font-weight:900;
+    font-size:16px;
+    z-index:6;
+    white-space:nowrap;
+    pointer-events:none;
+  }
+  #speech::after{
+    content:"";
+    position:absolute;
+    bottom:-10px; left:20px;
+    width:12px; height:12px;
+    background:white;
+    border-right:3px solid #222;
+    border-bottom:3px solid #222;
+    transform: rotate(45deg);
+  }
+  #platform {
+    position:absolute;
+    height:22px;
+    background: #ff4757;
+    border:3px solid #222;
+    border-radius:12px;
+    box-shadow: 0 4px 0 #222;
+    z-index:4;
+  }
+  #platform::before{
+    content:"SAVE PAD™";
+    position:absolute;
+    top:-20px; left:50%;
+    transform:translateX(-50%);
+    font-size:11px; font-weight:900;
+    background:#fffa65; border:2px solid #222;
+    padding:0 6px; border-radius:8px; white-space:nowrap;
+  }
+  #ground {
+    position:absolute; bottom:0; left:0; right:0;
+    height:26px;
+    background:#4a9a4a;
+    border-top:4px solid #222;
+    z-index:3;
+  }
+  #hud {
+    position:absolute; top:10px; right:10px;
+    display:flex; gap:8px; z-index:10;
+  }
+  .pill {
+    background:#fff; border:3px solid #222;
+    border-radius:20px; padding:4px 12px;
+    font-weight:900; font-size:15px;
+    box-shadow: 2px 2px 0 #222;
+  }
+  #message {
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background: rgba(0,0,0,.62);
+    color:white;
+    z-index:20;
+    padding:24px;
+  }
+  #message.hidden { display:none; }
+  #message h1 {
+    font-size: clamp(32px, 8vw, 52px);
+    line-height:1;
+    text-shadow: 4px 4px 0 #222;
+    margin-bottom:10px;
+  }
+  #message p { font-size:17px; margin:6px 0 12px; max-width:360px; }
+  #bigbtn {
+    font-family:inherit;
+    font-size:22px; font-weight:900;
+    background:#fffa65;
+    border:4px solid #222;
+    border-radius:16px;
+    padding:12px 28px;
+    cursor:pointer;
+    box-shadow: 4px 4px 0 #222;
+  }
+  #bigbtn:active { transform: translate(2px,2px); box-shadow:1px 1px 0 #222; }
+  #hint {
+    position:absolute; bottom:34px; left:0; right:0;
+    text-align:center; font-size:13px; font-weight:700;
+    color:#222; opacity:.75; z-index:5; pointer-events:none;
+  }
+  .splat { position:absolute; font-size:56px; z-index:8; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="building"></div>
+  <div id="roof-label">TOTALLY SAFE ROOF</div>
+  <div id="hud">
+    <div class="pill">💾 Saved: <span id="score">0</span></div>
+    <div class="pill">🏆 Best: <span id="best">0</span></div>
+  </div>
+  <div id="pusher">😈</div>
+  <div id="lahour">🧍‍♀️</div>
+  <div id="speech">hey what are—</div>
+  <div id="platform"></div>
+  <div id="ground"></div>
+  <div id="hint">← → / A D / mouse / touch to move the red SAVE PAD™</div>
+
+  <div id="message">
+    <h1>SAVE<br>LAHOUR!! 🧍‍♀️🏢</h1>
+    <p>Lahour is chilling on a roof (bad idea).<br>
+    Someone is about to push her off.<br><br>
+    👉 Move the <b style="color:#ff6b81">red platform</b> to catch her.<br>
+    Miss = splat. Don't let her splat.</p>
+    <button id="bigbtn">PUSH HER 😈</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const wrap = document.getElementById('wrap');
+  const lahourEl = document.getElementById('lahour');
+  const pusherEl = document.getElementById('pusher');
+  const speechEl = document.getElementById('speech');
+  const platformEl = document.getElementById('platform');
+  const msgEl = document.getElementById('message');
+  const btnEl = document.getElementById('bigbtn');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const hintEl = document.getElementById('hint');
+
+  let W = wrap.clientWidth, H = wrap.clientHeight;
+  const ROOF_H = () => H * 0.32;
+  const GROUND_H = 26;
+  const LAHOUR_SIZE = 52;
+
+  let state = 'menu'; // menu | standing | falling | over
+  let score = 0;
+  let best = parseInt(localStorage.getItem('lahour-best') || '0', 10) || 0;
+  bestEl.textContent = best;
+
+  let lahour = { x:0, y:0, vx:0, vy:0, rot:0, vrot:0 };
+  let platform = { x: 0, w: 130, y: 0 };
+  let keys = {};
+  let lastT = 0;
+  let wind = 0;
+  let gravity = 2400;
+  let roundNum = 0;
+
+  const screams = ["AAAHHH!!", "LAHOUUUR!!", "NOT THE ROOF!!", "I'M TOO PRETTY!!", "CALL MY MOM!!", "WHYYY THOOO!!", "NOOOOooo...!!"];
+  const splatLines = [
+    "SPLAT. Lahour has left the chat.",
+    "Lahour is now modern art on the sidewalk.",
+    "RIP Lahour. She landed like a pancake. 🥞",
+    "That platform was RIGHT THERE, bro.",
+    "Lahour respawns... probably mad."
+  ];
+  const saveLines = ["PHEW!", "CAUGHT!", "SAVED!", "NICE CATCH!", "LAHOUR LIVES!"];
+
+  function resize() {
+    W = wrap.clientWidth; H = wrap.clientHeight;
+    platform.y = H - GROUND_H - 26;
+    platformEl.style.top = platform.y + 'px';
+    platformEl.style.width = platform.w + 'px';
+    if (state === 'menu' || state === 'standing') placeStanding();
+    render();
+  }
+  window.addEventListener('resize', resize);
+
+  function placeStanding() {
+    lahour.x = 62;
+    lahour.y = ROOF_H() - LAHOUR_SIZE - 4;
+    lahour.vx = 0; lahour.vy = 0; lahour.rot = 0; lahour.vrot = 0;
+    lahourEl.textContent = '🧍‍♀️'; // standing woman, as requested
+    pusherEl.style.left = '12px';
+    pusherEl.style.top = (ROOF_H() - 54) + 'px';
+    speechEl.textContent = 'what a nice safe roof—';
+    positionSpeech();
+    platform.x = W/2 - platform.w/2;
+  }
+
+  function positionSpeech() {
+    speechEl.style.left = (lahour.x - 10) + 'px';
+    speechEl.style.top = (lahour.y - 42) + 'px';
+  }
+
+  function startRound() {
+    roundNum++;
+    msgEl.classList.add('hidden');
+    state = 'standing';
+    // difficulty: smaller platform + faster
+    platform.w = Math.max(70, 130 - roundNum * 6);
+    platformEl.style.width = platform.w + 'px';
+    placeStanding();
+    speechEl.style.display = 'block';
+    // dramatic pause, then PUSH
+    setTimeout(() => {
+      if (state !== 'standing') return;
+      pushHer();
+    }, 1300);
+  }
+
+  function pushHer() {
+    state = 'falling';
+    // shove her off the roof to the right
+    const pushPower = 120 + Math.random()*140 + roundNum*12;
+    lahour.vx = pushPower;
+    lahour.vy = -60; // little hop
+    lahour.vrot = 120 + Math.random()*160;
+    wind = (Math.random()-0.5) * 160;
+    gravity = 2300 + roundNum * 150;
+    speechEl.textContent = screams[Math.floor(Math.random()*screams.length)];
+    boing(200, 0.12, 'sawtooth');
+    // pusher does the deed
+    pusherEl.style.left = '52px';
+    setTimeout(()=>{ if(state==='falling') speechEl.style.display='none'; }, 900);
+  }
+
+  function render() {
+    lahourEl.style.left = lahour.x + 'px';
+    lahourEl.style.top = lahour.y + 'px';
+    lahourEl.style.transform = `rotate(${lahour.rot}deg)`;
+    platformEl.style.left = platform.x + 'px';
+    if (state==='standing' || (state==='menu')) positionSpeech();
+  }
+
+  function loop(t) {
+    requestAnimationFrame(loop);
+    if (!lastT) lastT = t;
+    let dt = Math.min(0.033, (t - lastT)/1000);
+    lastT = t;
+
+    // platform movement
+    const speed = 420;
+    if (keys['arrowleft'] || keys['a']) platform.x -= speed*dt;
+    if (keys['arrowright'] || keys['d']) platform.x += speed*dt;
+    platform.x = Math.max(2, Math.min(W - platform.w - 2, platform.x));
+    platformEl.style.left = platform.x + 'px';
+
+    if (state === 'falling') {
+      lahour.vy += gravity * dt;
+      lahour.vx += wind * dt;
+      lahour.x += lahour.vx * dt;
+      lahour.y += lahour.vy * dt;
+      lahour.rot += lahour.vrot * dt;
+
+      // wall bounce (right wall only, funny)
+      if (lahour.x + LAHOUR_SIZE > W) { lahour.x = W - LAHOUR_SIZE; lahour.vx *= -0.4; }
+
+      render();
+
+      // catch check: platform top zone
+      const feetY = lahour.y + LAHOUR_SIZE;
+      const lahourCX = lahour.x + LAHOUR_SIZE/2;
+      if (lahour.vy > 0 && feetY >= platform.y && feetY <= platform.y + 30 &&
+          lahourCX > platform.x - 6 && lahourCX < platform.x + platform.w + 6) {
+        onSave();
+        return;
+      }
+      // ground check
+      if (feetY >= H - GROUND_H) {
+        onSplat();
+        return;
+      }
+      // fell off left? shouldn't happen, clamp
+      if (lahour.x < -60) { lahour.x = -60; lahour.vx = Math.abs(lahour.vx)*0.5; }
+    }
+  }
+
+  function onSave() {
+    score++;
+    scoreEl.textContent = score;
+    if (score > best) { best = score; localStorage.setItem('lahour-best', best); bestEl.textContent = best; }
+    speechEl.style.display = 'block';
+    speechEl.textContent = saveLines[Math.floor(Math.random()*saveLines.length)];
+    positionSpeech();
+    lahourEl.textContent = '🤸‍♀️';
+    boing(500, 0.25, 'square');
+    setTimeout(()=>boing(750,0.2,'square'),120);
+    state = 'standing';
+    // little happy bounce then next victim— er, round
+    setTimeout(() => { if (score>0) startRound(); }, 1100);
+  }
+
+  function onSplat() {
+    state = 'over';
+    lahour.y = H - GROUND_H - LAHOUR_SIZE + 8;
+    render();
+    lahourEl.textContent = '🫠';
+    splat(180);
+    // splat emoji burst
+    const s = document.createElement('div');
+    s.className = 'splat';
+    s.textContent = '💥';
+    s.style.left = (lahour.x - 4) + 'px';
+    s.style.top = (H - GROUND_H - 56) + 'px';
+    wrap.appendChild(s);
+    setTimeout(()=>s.remove(), 1200);
+
+    const line = splatLines[Math.floor(Math.random()*splatLines.length)];
+    setTimeout(() => {
+      msgEl.classList.remove('hidden');
+      msgEl.innerHTML = `<h1>SPLAT 💥</h1>
+        <p>${line}<br><br>You saved Lahour <b>${score}</b> time${score===1?'':'s'}.</p>
+        <button id="bigbtn">REVIVE & RETRY 🧍‍♀️</button>
+        <p style="font-size:13px;opacity:.8">best streak: ${best}</p>`;
+      document.getElementById('bigbtn').onclick = () => { score = 0; scoreEl.textContent = 0; roundNum = 0; startRound(); };
+    }, 800);
+  }
+
+  // --- input ---
+  function pointerToX(clientX) {
+    const r = wrap.getBoundingClientRect();
+    return clientX - r.left - platform.w/2;
+  }
+  let dragging = false;
+  wrap.addEventListener('pointerdown', e => { dragging = true; platform.x = clampPointer(pointerToX(e.clientX)); });
+  window.addEventListener('pointermove', e => { if (dragging || e.pointerType==='mouse') {
+    // mouse always follows (feels good on desktop), touch only while dragging
+    if (e.pointerType==='mouse') {
+      const r = wrap.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom)
+        platform.x = clampPointer(pointerToX(e.clientX));
+    } else if (dragging) platform.x = clampPointer(pointerToX(e.clientX));
+  }});
+  window.addEventListener('pointerup', ()=> dragging=false);
+  function clampPointer(x){ return Math.max(2, Math.min(W - platform.w - 2, x)); }
+
+  window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if(['arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); });
+  window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+  btnEl.onclick = () => { score = 0; scoreEl.textContent = 0; roundNum = 0; startRound(); };
+
+  // --- tiny joke sounds, no files needed ---
+  let AC = null;
+  function audio(){ if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); return AC; }
+  function boing(freq, dur, type){
+    try{
+      const ac = audio(), o = ac.createOscillator(), g = ac.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(Math.max(60,freq*0.4), ac.currentTime+dur);
+      g.gain.setValueAtTime(0.25, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+dur);
+      o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+dur);
+    }catch(e){}
+  }
+  function splat(freq){
+    try{
+      const ac = audio(), o = ac.createOscillator(), g = ac.createGain();
+      o.type='sawtooth'; o.frequency.setValueAtTime(freq, ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(35, ac.currentTime+0.4);
+      g.gain.setValueAtTime(0.35, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+0.4);
+      o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+0.4);
+    }catch(e){}
+  }
+
+  resize();
+  placeStanding();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

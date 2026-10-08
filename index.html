@@ -383,7 +383,7 @@
         <p>${line}<br><br>You saved Lahour <b>${score}</b> time${score===1?'':'s'}.</p>
         <button id="bigbtn">REVIVE & RETRY 🧍‍♀️</button>
         <p style="font-size:13px;opacity:.8">best streak: ${best}</p>`;
-      document.getElementById('bigbtn').onclick = () => { score = 0; scoreEl.textContent = 0; roundNum = 0; startRound(); };
+      document.getElementById('bigbtn').onclick = () => { unlockAudio(); score = 0; scoreEl.textContent = 0; roundNum = 0; startRound(); };
     }, 800);
   }
 
@@ -408,10 +408,27 @@
   window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if(['arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); });
   window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
-  btnEl.onclick = () => { score = 0; scoreEl.textContent = 0; roundNum = 0; startRound(); };
+  btnEl.onclick = () => { unlockAudio(); score = 0; scoreEl.textContent = 0; roundNum = 0; startRound(); };
 
   // --- tiny joke sounds, no files needed ---
+  // Mobile browsers (iOS Safari + Chrome Android) start the AudioContext
+  // suspended and only allow resume() inside a real user tap. We were
+  // creating it 1.3s AFTER the button tap (in pushHer), so it stayed
+  // blocked. Fix: create + resume synchronously inside the tap.
   let AC = null;
+  function unlockAudio(){
+    try{
+      if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
+      if(AC.state==='suspended') AC.resume();
+      // iOS silent-mode nudge: play 1 sample of silence
+      const b = AC.createBuffer(1, 1, 22050);
+      const s = AC.createBufferSource();
+      s.buffer = b; s.connect(AC.destination); s.start(0);
+    }catch(e){}
+  }
+  // unlock on any first touch/click
+  window.addEventListener('pointerdown', unlockAudio, {passive:true});
+  window.addEventListener('touchend', unlockAudio, {passive:true});
   function audio(){ if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); return AC; }
   function boing(freq, dur, type){
     try{
